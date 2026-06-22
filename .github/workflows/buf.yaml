@@ -8,12 +8,11 @@ on:
     branches: [ main ]
 
 jobs:
-  buf-ci:
+  validate:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
       pull-requests: write
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -25,12 +24,25 @@ jobs:
         with:
           breaking_against: 'https://github.com/${{ github.repository }}.git#branch=main'
 
+  generate-and-deploy:
+    needs: validate
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup Buf
+        uses: bufbuild/buf-action@v1
+        with:
+          setup_only: true
+
       - name: Generate Multi-Language Code
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: buf generate
 
       - name: Commit and Push Generated Code
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Automatic protobuf code generation"
