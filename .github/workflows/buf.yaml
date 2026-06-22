@@ -1,0 +1,40 @@
+name: Passerelle CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    types: [ opened, synchronize, reopened ]
+    branches: [ main ]
+
+jobs:
+  buf-ci:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 
+
+      - name: Run Buf Checks
+        uses: bufbuild/buf-action@v1
+        with:
+          breaking_against: 'https://github.com/${{ github.repository }}.git#branch=main'
+
+      - name: Generate Multi-Language Code
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: buf generate
+
+      - name: Commit and Push Generated Code
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Automatic protobuf code generation"
+          branch: main
+          file_pattern: 'gen/**'
+          commit_user_name: "aeluin-bot"
+          commit_user_email: "bot@gravitalia.com"
