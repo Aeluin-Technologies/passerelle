@@ -1,0 +1,9 @@
+[package]
+name = "passerelle"
+version = "0.1.0"
+edition = "2024"
+authors = ["Aeluin Technologies <contact@aeluin.com>"]
+description = "SSoT for shared interfaces across the Aeluin ecosystem."
+
+[dependencies]
+prost = "0.14"
